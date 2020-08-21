@@ -45,13 +45,15 @@ public class Main {
 	
 	public static void main(String[] args) throws Exception {
 		
+		//server Graphdb connection
+		
 		String serverURL= "http://localhost:7200";
 		String repositoryId ="smart_home";
 		
 		
 		RemoteRepositoryManager manager = new RemoteRepositoryManager(serverURL);
 
-        // manager.setUsernameAndPassword(username, password);
+        
         manager.init();
 
         try {
@@ -75,8 +77,6 @@ public class Main {
 	
 	 
     public static void jsontordf() throws IOException  {
-//    	String path = "example_observations.json";
-//        BufferedReader bufferedReader = new BufferedReader(new FileReader(path));
 
         Gson gson = new Gson();
         File file = new File("example_observations.json");
@@ -86,24 +86,18 @@ public class Main {
         fis.close();
 
         String str = new String(data, "UTF-8");
-        //System.out.println(str);
-        //JsonReader reader = new JsonReader(new FileReader("example_observations.json"));
+       
         JsonElement json = gson.fromJson(str, JsonElement.class);
         JsonObject jobject = json.getAsJsonObject();
       
         ValueFactory f = SimpleValueFactory.getInstance();
         ModelBuilder builder = new ModelBuilder();
-        //String uuid;
+      
         String smho = "http://www.semanticweb.org/user/ontologies/2020/6/untitled-ontology-3#"; 
      
        
             	
                 builder.setNamespace("smho", smho );
-                //uuid = UUID.randomUUID().toString().replaceAll("-", "");
-
-//                IRI activity_ = f.createIRI(smho + "Activity_" + uuid);
-//                IRI activity = f.createIRI(smho + "Activity");
-//                builder.add(activity_, RDF.TYPE, activity);
                 
                int counter=0;
                 
@@ -111,12 +105,9 @@ public class Main {
                
                for(int i=0; i<jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().size(); i++) {
             	   String Activity_name = jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("content").getAsString();
-            	   IRI activity_ = f.createIRI(smho + Activity_name);
-            	   //IRI activity_ = f.createIRI(smho + "Activity_" + i);
+            	   IRI activity_ = f.createIRI(smho + Activity_name);  
                    IRI activity = f.createIRI(smho + "Activity");
-//                   IRI observation_ = f.createIRI(smho + "Observation_" + counter);
-//                   IRI observation = f.createIRI(smho + "Observation");
-//                   builder.add(observation_, RDF.TYPE, observation);
+             
                    builder.add(activity_, RDF.TYPE, activity);
                    
             	   builder.add(activity_.toString(), "smho:hasStartTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("start").getAsString());
@@ -127,11 +118,8 @@ public class Main {
 	             
 	               for (int j=0; j<jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().size(); j++) {
 	            	   counter++;
-	            	   //UUID uuid = UUID.randomUUID();
-	                   //String id = uuid.toString();
 	            	   String Observation_name = jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().get(j).getAsJsonObject().get("content").getAsString();
 	            	   IRI observation_ = f.createIRI(smho + "Observation_" + counter);
-	            	   //IRI observation_ = f.createIRI(smho + "Observation_" + id);
 	                   IRI observation = f.createIRI(smho + "Observation");
 	                   IRI observation_type = f.createIRI(smho + Observation_name);
 	                   
@@ -152,8 +140,7 @@ public class Main {
                
                }
                
-        
-       // Model m = builder.build();
+    
      // When adding data we need to start a transaction
         Main.connection.begin();
 
@@ -163,19 +150,7 @@ public class Main {
         Main.connection.add(m);
 
         Main.connection.commit();
-//        m.setNamespace(RDF.NS);
-//		m.setNamespace(RDFS.NS); 
-//		m.setNamespace("smho", smho);
-//		FileOutputStream out = new FileOutputStream("C:\\Users\\User\\Desktop\\file.rdf");
-//		try {
-//			  Rio.write(m, out, RDFFormat.RDFXML);
-//			}
-//			finally {
-//			  out.close();
-//			}
-		//Rio.write(m, System.out, RDFFormat.TURTLE);
-        
-        //System.out.println(m);
+
                
     }
     
