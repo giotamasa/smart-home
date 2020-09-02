@@ -2,6 +2,7 @@ package jsontordf;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -14,6 +15,7 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.MalformedQueryException;
@@ -101,21 +103,37 @@ public class Main {
                 
                int counter=0;
                 
-               
+               //αρχικοποίηση prevActivity σε null για να μην έχει το πρώτο activity previous
+               IRI prevActivity = null;
                
                for(int i=0; i<jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().size(); i++) {
             	   String Activity_name = jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("content").getAsString();
             	   IRI activity_ = f.createIRI(smho + Activity_name);  
                    IRI activity = f.createIRI(smho + "Activity");
-             
-                   builder.add(activity_, RDF.TYPE, activity);
                    
-            	   builder.add(activity_.toString(), "smho:hasStartTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("start").getAsString());
-                
-	               builder.add(activity_.toString(), "smho:hasEndTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("end").getAsString());
+                   builder.subject(activity_).add(RDF.TYPE, activity);
+                   
+                   //builder.add(activity_, RDF.TYPE, activity);
+                   
+                   if(prevActivity != null) {
+                	   //builder.add(activity_.toString(), "smho:isNextOf", prevActivity);
+                	   //builder.add(prevActivity.toString(), "smho:hasNext", activity_);
+                	   builder.subject(prevActivity).add("smho:hasNext", activity_);
+                   }
+                   
+            	   //builder.add(activity_.toString(), "smho:hasStartTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("start").getAsString());
+                   builder.subject(activity_).add("smho:hasStartTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("start").getAsString());
+	               
+                   
+                   //builder.add(activity_.toString(), "smho:hasEndTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("end").getAsString());
+                   builder.add("smho:hasEndTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("end").getAsString());
+                   
+	               //builder.add(activity_.toString(), "smho:hasContent", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("content").getAsString());
+                   builder.add("smho:hasContent", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("content").getAsString());
 	              
-	               builder.add(activity_.toString(), "smho:hasContent", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("content").getAsString());
-	             
+                   //ορισμός prevActivity σε τρέχων activity για να γίνει το Previous του επόμενου activity
+	               prevActivity = activity_;
+	               
 	               for (int j=0; j<jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().size(); j++) {
 	            	   counter++;
 	            	   String Observation_name = jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().get(j).getAsJsonObject().get("content").getAsString();
@@ -123,17 +141,25 @@ public class Main {
 	                   IRI observation = f.createIRI(smho + "Observation");
 	                   IRI observation_type = f.createIRI(smho + Observation_name);
 	                   
+	                   builder.subject(activity_).add("smho:hasObservations", observation_);
+	                   //builder.add(activity_.toString(), "smho:hasObservations", observation_);
 	                   
-	                   builder.add(activity_.toString(), "smho:hasObservations", observation_);
-	                   
-	                   builder.add(observation_, RDF.TYPE, observation);
+	                   builder.subject(observation_).add(RDF.TYPE, observation).add(RDF.TYPE, observation_type);
+	                   /*builder.add(observation_, RDF.TYPE, observation);
 	                   builder.add(observation_, RDF.TYPE, observation_type);
+	                   */
 	                   
-	                   builder.add(observation_.toString(), "smho:hasStartTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().get(j).getAsJsonObject().get("start").getAsString());
+	                   builder.subject(observation_).add("smho:hasStartTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().get(j).getAsJsonObject().get("start").getAsString());
 	                   
-	                   builder.add(observation_.toString(), "smho:hasEndTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().get(j).getAsJsonObject().get("end").getAsString());
+	                   //builder.add(observation_.toString(), "smho:hasStartTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().get(j).getAsJsonObject().get("start").getAsString());
+	                   
+	                   builder.add("smho:hasEndTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().get(j).getAsJsonObject().get("end").getAsString());
+		                  
+	                   //builder.add(observation_.toString(), "smho:hasEndTime", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().get(j).getAsJsonObject().get("end").getAsString());
 	                  
-	                   builder.add(observation_.toString(), "smho:hasContent", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().get(j).getAsJsonObject().get("content").getAsString());
+	                   builder.add("smho:hasContent", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().get(j).getAsJsonObject().get("content").getAsString());
+	                   
+	                   //builder.add(observation_.toString(), "smho:hasContent", jobject.get("model").getAsJsonObject().get("activities").getAsJsonArray().get(i).getAsJsonObject().get("observations").getAsJsonArray().get(j).getAsJsonObject().get("content").getAsString());
 	                   
 	               
 	               }
@@ -150,6 +176,19 @@ public class Main {
         Main.connection.add(m);
 
         Main.connection.commit();
+        m.setNamespace(RDF.NS);
+		m.setNamespace(RDFS.NS); 
+	m.setNamespace("smho", smho);
+	FileOutputStream out = new FileOutputStream("C:\\Users\\User\\Desktop\\file.rdf");
+	try {
+		  Rio.write(m, out, RDFFormat.RDFXML);
+		}
+			finally {
+		  out.close();
+		}
+		Rio.write(m, System.out, RDFFormat.TURTLE);
+        
+        System.out.println(m);
 
                
     }
