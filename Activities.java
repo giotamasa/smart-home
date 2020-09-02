@@ -49,9 +49,7 @@ public class Activities  {
         }
         preparedUpdate.execute();
     }
-    
-    
-
+   
     
     public static void sparqlQueries(String query) throws Exception {
     	
@@ -64,9 +62,6 @@ public class Activities  {
         // Separate connection to a repository
         RepositoryConnection connection = repository.getConnection();
 
-    	
-    	 
-
         try {
         	
         	// When adding data we need to start a transaction
@@ -77,9 +72,7 @@ public class Activities  {
                     String.format(query));
 
             // Committing the transaction persists the changes
-            connection.commit();
-            
-            
+            connection.commit();      
            
         } finally {
             // It is best to close the connection in a finally block
